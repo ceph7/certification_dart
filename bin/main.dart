@@ -52,7 +52,7 @@ void main() async {
 
             final status = task.isCompleted ? '[X]' : '[ ]';
 
-            print('$status ${task.id} - ${task.title} (Priorité : ${task})');
+            print('$status ${task.id} - ${task.title} (Priorité : ${task.name})');
       
 
           }
