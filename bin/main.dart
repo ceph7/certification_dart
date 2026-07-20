@@ -52,7 +52,7 @@ void main() async {
 
             final status = task.isCompleted ? '[X]' : '[ ]';
 
-            print('$status ${task.id} - ${task.title} (Priorité : ${task.name})');
+            print('$status ${task.id} - ${task.title} (Priorité : ${task})');
       
 
           }
@@ -61,10 +61,40 @@ void main() async {
 
 
     case '3':
-    stdout.write('ID de la tâche à terminer :'`)
+    stdout.write('ID de la tâche à terminer :');
+    final id = stdin.readLineSync() ?? '';
+    try{
+      manager.completeTask(id);
+      await manager.save();
+      print('Tache marquée comme terminée !');
+    } on TaskNotFoundException catch (e){
+      print(e);
+    }
+break;
 
 
+case '4':
+stdout.write('ID de la tâche à supprimer :');
+final id = stdin.readLineSync() ?? '';
+try{
+
+  manager.remove(id);
+  await manager.save();
+  print('Tâche supprimée !');
+
+} on TaskNotFoundException catch(e){
+
+  print(e);
+}
+ break;
     
+    case '5':
+    print('Au revoir et merci !');
+    exit(0);
+
+
+    default:
+    print('Option invalide');
 
 
   }
