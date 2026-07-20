@@ -15,6 +15,12 @@ class TaskManager implements Repository<Task>{
 
       TaskManager({this.filePath = 'tasks.json'});
 
+
+   @override
+      void add(Task task){
+        _tasks.add(task);
+      }
+      
       @override
       void remove(String id){
         final initialLength = _tasks.length;
@@ -25,10 +31,6 @@ class TaskManager implements Repository<Task>{
         }
       }
 
-      @override
-      void add(Task task){
-        _tasks.add(task);
-      }
 
       @override
       List<Task> getAll() => List.unmodifiable(_tasks);

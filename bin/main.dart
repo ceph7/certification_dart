@@ -26,7 +26,7 @@ void main() async {
       case '1':
       stdout.write('Titre :');
       final title = stdin.readLineSync() ?? '';
-      stdout.write('Priorite : (low ,  medidum ,high) : ');
+      stdout.write('Priorite : (Bas ,  medidum , élevé) : ');
       final priorityStr = stdin.readLineSync()?.toLowerCase() ?? 'medium';
 
       final priority = Priority.values.firstWhere((e) => e.name == priorityStr , 
@@ -52,7 +52,7 @@ void main() async {
 
             final status = task.isCompleted ? '[X]' : '[ ]';
 
-            print('$status ${task.id} - ${task.title} (Priorité : ${task.priority})');
+            print('$status ${task.id} - ${task.title} (Priorité : ');
       
 
           }
