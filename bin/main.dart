@@ -20,6 +20,7 @@ void main() async {
     stdout.writeln('4. Supprimer une tâche');
     stdout.writeln('5. Quitter');
     stdout.write('Choisissez une option : ');
+
      final choice = stdin.readLineSync();
 
      switch(choice){
@@ -33,8 +34,7 @@ void main() async {
 
       try{
       final priority = Priority.values.firstWhere((e) => e.name == priorityStr ,
-      orElse: () => throw InvalidPriorityException(
-        '"$priorityStr" n\'est pas une priorité valide. Utilise low, medium ou high.'),);
+      orElse: () => throw InvalidPriorityException('"$priorityStr" n\'est pas une priorité valide. Utilise low, medium ou high.'),);
 
       stdout.write('Date limite (AAAA-MM-JJ), laisser vide si aucune : ');
       final dueDateStr = stdin.readLineSync() ?? '';
