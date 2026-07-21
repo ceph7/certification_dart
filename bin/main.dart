@@ -26,23 +26,52 @@ void main() async {
       case '1':
       stdout.write('Titre :');
       final title = stdin.readLineSync() ?? '';
-      stdout.write('Priorite : (Bas ,  medidum , élevé) : ');
-      final priorityStr = stdin.readLineSync()?.toLowerCase() ?? 'medium';
+      stdout.write('Type de tâche (1 = standard, 2 = urgente) : ');
+      final typeChoice = stdin.readLineSync();
+      stdout.write('Priorite (low / medium / high) : ');
+      final priorityStr = stdin.readLineSync()?.toLowerCase() ?? '';
 
-      final priority = Priority.values.firstWhere((e) => e.name == priorityStr , 
-      orElse: () => Priority.medium,);
+      try{
+      final priority = Priority.values.firstWhere((e) => e.name == priorityStr ,
+      orElse: () => throw InvalidPriorityException(
+        '"$priorityStr" n\'est pas une priorité valide. Utilise low, medium ou high.'),);
 
+      stdout.write('Date limite (AAAA-MM-JJ), laisser vide si aucune : ');
+      final dueDateStr = stdin.readLineSync() ?? '';
+      final dueDate = dueDateStr.trim().isEmpty ? null : DateTime.parse(dueDateStr.trim());
+
+      if (typeChoice == '2'){
+        stdout.write('Notes (raison de l\'urgence) : ');
+        final notes = stdin.readLineSync() ?? '';
+        manager.add(UrgentTask(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          title: title,
+          priority: priority,
+          dueDate: dueDate,
+          notes: notes));
+      } else {
       manager.add(StandardTask(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
          title: title, 
-         priority: priority));
+         priority: priority,
+         dueDate: dueDate));
+      }
          await manager.save();
          print('Tache ajoutée !');
+      } on InvalidPriorityException catch (e){
+        print(e);
+      } on FormatException{
+        print('Erreur de saisie : date invalide, utilise le format AAAA-MM-JJ.');
+      }
          break;
 
 
          case '2' :
-         final tasks = manager.getSortedByPriority();
+         stdout.write('Trier par (1 = priorité, 2 = date limite) : ');
+         final sortChoice = stdin.readLineSync();
+         final tasks = sortChoice == '2'
+          ? manager.getSortedByDueDate()
+          : manager.getSortedByPriority();
          if (tasks.isEmpty){
           print('Aucune tache');
 
@@ -51,8 +80,13 @@ void main() async {
           for (var task in tasks){
 
             final status = task.isCompleted ? '[X]' : '[ ]';
+            final dueStr = task.dueDate == null ? 'aucune' : task.dueDate!.toIso8601String().split('T').first;
+            final typeTag = task is UrgentTask ? '🔥 URGENT' : 'standard';
 
-            print('$status ${task.id} - ${task.title} (Priorité : ${task.priority.name} )');
+            print('$status ${task.id} - ${task.title} (Priorité : ${task.priority.name} , Date limite : $dueStr, Type : $typeTag)');
+            if (task is UrgentTask){
+              print('     ↳ Notes : ${task.notes}');
+            }
       
 
           }
