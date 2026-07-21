@@ -81,7 +81,7 @@ void main() async {
 
             final status = task.isCompleted ? '[X]' : '[ ]';
             final dueStr = task.dueDate == null ? 'aucune' : task.dueDate!.toIso8601String().split('T').first;
-            final typeTag = task is UrgentTask ? '🔥 URGENT' : 'standard';
+            final typeTag = task is UrgentTask ? 'URGENT' : 'standard';
 
             print('$status ${task.id} - ${task.title} (Priorité : ${task.priority.name} , Date limite : $dueStr, Type : $typeTag)');
             if (task is UrgentTask){
