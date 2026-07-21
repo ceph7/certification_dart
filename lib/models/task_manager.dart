@@ -43,6 +43,17 @@ class TaskManager implements Repository<Task>{
         return sortedList;
       }
 
+      /// Trie les tâches en utilisant le score d'urgence polymorphique
+      /// (`Task.urgencyScore`), qui est calculé différemment selon que
+      /// la tâche soit `UrgentTask` ou `StandardTask`.
+      List<Task> getSortedByUrgency(){
+
+        final sortedList = List<Task>.from(_tasks);
+        sortedList.sort((a, b) =>
+        b.urgencyScore.compareTo(a.urgencyScore));
+        return sortedList;
+      }
+
       List<Task> getSortedByDueDate(){
 
         final sortedList = List<Task>.from(_tasks);
