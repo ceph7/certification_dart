@@ -43,6 +43,18 @@ class TaskManager implements Repository<Task>{
         return sortedList;
       }
 
+      List<Task> getSortedByDueDate(){
+
+        final sortedList = List<Task>.from(_tasks);
+        sortedList.sort((a, b) {
+          if (a.dueDate == null && b.dueDate == null) return 0;
+          if (a.dueDate == null) return 1;
+          if (b.dueDate == null) return -1;
+          return a.dueDate!.compareTo(b.dueDate!);
+        });
+        return sortedList;
+      }
+
       void completeTask(String id){
 
         final taskIndex = _tasks.indexWhere((task) => task.id == id);
