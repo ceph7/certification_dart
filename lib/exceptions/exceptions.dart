@@ -19,3 +19,13 @@ class StorageException implements Exception{
   @override
   String toString() => 'Erreur de stockage : $message';
 }
+
+class InvalidPriorityException implements Exception{
+  final String message;
+
+  InvalidPriorityException(this.message);
+
+
+  @override
+  String toString() => 'Erreur de saisie : $message';
+}
