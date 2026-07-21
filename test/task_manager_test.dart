@@ -5,9 +5,6 @@ import 'package:task_manager/models/task_manager.dart';
 import 'package:task_manager/task.dart';
 import 'package:task_manager/exceptions/exceptions.dart';
 
-// Persistable, ManageableTask, Task, UrgentTask, StandardTask sont tous
-// exportés par package:task_manager/task.dart.
-
 void main() {
   group('Tests du TaskManager', () {
     late TaskManager manager;
@@ -68,8 +65,7 @@ void main() {
     });
 
     test('Trier les tâches par date limite (les nulles en dernier)', () {
-      manager.add(StandardTask(
-          id: '1', title: 'Sans date', priority: Priority.low));
+      manager.add(StandardTask(id: '1', title: 'Sans date', priority: Priority.low));
       manager.add(StandardTask(
           id: '2',
           title: 'Proche',
@@ -85,18 +81,23 @@ void main() {
       expect(sorted.map((t) => t.id).toList(), ['2', '3', '1']);
     });
 
+    test('Trier les tâches par urgence : une UrgentTask passe toujours avant une StandardTask', () {
+      manager.add(StandardTask(id: '1', title: 'Standard haute', priority: Priority.high));
+      manager.add(UrgentTask(id: '2', title: 'Urgente basse', priority: Priority.low, notes: 'n'));
+
+      final sorted = manager.getSortedByUrgency();
+      expect(sorted.first.id, '2');
+    });
+
     test('Une UrgentTask a un score d\'urgence supérieur à une StandardTask de même priorité', () {
-      final urgent = UrgentTask(
-          id: '1', title: 'Urgente', priority: Priority.low, notes: 'car urgent');
-      final standard =
-          StandardTask(id: '2', title: 'Standard', priority: Priority.low);
+      final urgent = UrgentTask(id: '1', title: 'Urgente', priority: Priority.low, notes: 'car urgent');
+      final standard = StandardTask(id: '2', title: 'Standard', priority: Priority.low);
 
       expect(urgent.urgencyScore, greaterThan(standard.urgencyScore));
     });
 
     test('Terminer une UrgentTask ajoute une trace dans les notes (comportement redéfini)', () {
-      final task = UrgentTask(
-          id: '1', title: 'Urgente', priority: Priority.high, notes: 'raison');
+      final task = UrgentTask(id: '1', title: 'Urgente', priority: Priority.high, notes: 'raison');
       manager.add(task);
       manager.completeTask('1');
 
@@ -105,18 +106,21 @@ void main() {
       expect(saved.notes, contains('(terminée)'));
     });
 
-    test('Task, ManageableTask, UrgentTask forment bien une hiérarchie à plusieurs niveaux', () {
+    test('UrgentTask hérite de Task et implémente Persistable', () {
       final task = UrgentTask(id: '1', title: 'X', priority: Priority.low, notes: 'n');
       expect(task, isA<Task>());
-      expect(task, isA<ManageableTask>());
+      expect(task, isA<Persistable>());
+    });
+
+    test('StandardTask hérite de Task et implémente Persistable', () {
+      final task = StandardTask(id: '1', title: 'X', priority: Priority.low);
+      expect(task, isA<Task>());
       expect(task, isA<Persistable>());
     });
 
     test('toJson() (interface Persistable) produit les bons champs pour chaque type', () {
-      final urgent = UrgentTask(
-          id: '1', title: 'Urgente', priority: Priority.high, notes: 'critique');
-      final standard =
-          StandardTask(id: '2', title: 'Standard', priority: Priority.low);
+      final urgent = UrgentTask(id: '1', title: 'Urgente', priority: Priority.high, notes: 'critique');
+      final standard = StandardTask(id: '2', title: 'Standard', priority: Priority.low);
 
       expect(urgent.toJson()['type'], 'urgent');
       expect(urgent.toJson()['notes'], 'critique');
@@ -126,8 +130,7 @@ void main() {
 
     test('Sauvegarder puis recharger les tâches conserve leurs données (JSON)', () async {
       manager.add(StandardTask(id: '1', title: 'Standard', priority: Priority.medium));
-      manager.add(UrgentTask(
-          id: '2', title: 'Urgente', priority: Priority.high, notes: 'critique'));
+      manager.add(UrgentTask(id: '2', title: 'Urgente', priority: Priority.high, notes: 'critique'));
       await manager.save();
 
       final reloaded = TaskManager(filePath: testFile);
@@ -137,6 +140,15 @@ void main() {
       final urgent = reloaded.getAll().firstWhere((t) => t.id == '2') as UrgentTask;
       expect(urgent.notes, 'critique');
       expect(urgent.priority, Priority.high);
+    });
+
+    test('Charger un fichier JSON avec un type de tâche inconnu lève une StorageException', () async {
+      final file = File(testFile);
+      await file.writeAsString(
+          '[{"id":"1","title":"X","priority":"low","dueDate":null,"isCompleted":false,"type":"inconnu"}]');
+
+      final reloaded = TaskManager(filePath: testFile);
+      await expectLater(reloaded.load(), throwsA(isA<StorageException>()));
     });
   });
 }
