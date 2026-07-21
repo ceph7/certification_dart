@@ -1,13 +1,21 @@
 // lib/task.dart
 enum Priority { low, medium, high }
 
+/// Interface explicite (Dart 3 `interface class`) : tout type qui
+/// l'implémente s'engage à fournir sa propre méthode `toJson()`,
+/// sans hériter d'aucune implémentation par défaut. C'est une vraie
+/// interface au sens strict, distincte d'une classe abstraite classique.
+abstract interface class Persistable {
+  Map<String, dynamic> toJson();
+}
+
 /// Classe abstraite représentant une tâche générique.
 ///
-/// Les sous-classes doivent fournir leur propre sérialisation JSON
-/// ainsi qu'un comportement spécifique pour le calcul d'urgence
-/// (`urgencyScore`) et le résumé affiché (`summary`), ce qui illustre
-/// un vrai polymorphisme de comportement (et pas seulement de données).
-abstract class Task {
+/// Les sous-classes doivent fournir un comportement spécifique pour
+/// le calcul d'urgence (`urgencyScore`) et le résumé affiché
+/// (`summary`), ce qui illustre un vrai polymorphisme de comportement
+/// (et pas seulement de données).
+abstract class Task implements Persistable {
   String id;
   String title;
   Priority priority;
@@ -22,6 +30,9 @@ abstract class Task {
     this.isCompleted = false,
   });
 
+  /// Exigé par l'interface `Persistable`. Chaque sous-classe finale
+  /// (`UrgentTask`, `StandardTask`) fournit sa propre sérialisation.
+  @override
   Map<String, dynamic> toJson();
 
   /// Score numérique utilisé pour trier/prioriser les tâches.
@@ -38,7 +49,35 @@ abstract class Task {
   }
 }
 
-class UrgentTask extends Task {
+/// Classe intermédiaire qui approfondit la hiérarchie d'héritage :
+///
+///   Task  →  ManageableTask  →  UrgentTask / StandardTask
+///
+/// Elle implémente explicitement l'interface `Persistable` et
+/// centralise la partie commune de la sérialisation JSON (`baseJson`),
+/// que chaque sous-classe finale complète ensuite avec ses propres champs.
+abstract class ManageableTask extends Task {
+  ManageableTask({
+    required super.id,
+    required super.title,
+    required super.priority,
+    super.dueDate,
+    super.isCompleted,
+  });
+
+  /// Construit le socle JSON commun à toutes les tâches. Les
+  /// sous-classes l'utilisent puis y ajoutent leurs champs propres.
+  Map<String, dynamic> baseJson(String type) => {
+        'id': id,
+        'title': title,
+        'priority': priority.name,
+        'dueDate': dueDate?.toIso8601String(),
+        'isCompleted': isCompleted,
+        'type': type,
+      };
+}
+
+class UrgentTask extends ManageableTask {
   String notes;
 
   UrgentTask({
@@ -76,17 +115,12 @@ class UrgentTask extends Task {
 
   @override
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'priority': priority.name,
-        'dueDate': dueDate?.toIso8601String(),
-        'isCompleted': isCompleted,
-        'type': 'urgent',
+        ...baseJson('urgent'),
         'notes': notes,
       };
 }
 
-class StandardTask extends Task {
+class StandardTask extends ManageableTask {
   StandardTask({
     required super.id,
     required super.title,
@@ -106,12 +140,5 @@ class StandardTask extends Task {
   }
 
   @override
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'priority': priority.name,
-        'dueDate': dueDate?.toIso8601String(),
-        'isCompleted': isCompleted,
-        'type': 'standard',
-      };
+  Map<String, dynamic> toJson() => baseJson('standard');
 }

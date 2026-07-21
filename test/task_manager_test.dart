@@ -5,6 +5,9 @@ import 'package:task_manager/models/task_manager.dart';
 import 'package:task_manager/task.dart';
 import 'package:task_manager/exceptions/exceptions.dart';
 
+// Persistable, ManageableTask, Task, UrgentTask, StandardTask sont tous
+// exportés par package:task_manager/task.dart.
+
 void main() {
   group('Tests du TaskManager', () {
     late TaskManager manager;
@@ -100,6 +103,25 @@ void main() {
       final saved = manager.getAll().first as UrgentTask;
       expect(saved.isCompleted, isTrue);
       expect(saved.notes, contains('(terminée)'));
+    });
+
+    test('Task, ManageableTask, UrgentTask forment bien une hiérarchie à plusieurs niveaux', () {
+      final task = UrgentTask(id: '1', title: 'X', priority: Priority.low, notes: 'n');
+      expect(task, isA<Task>());
+      expect(task, isA<ManageableTask>());
+      expect(task, isA<Persistable>());
+    });
+
+    test('toJson() (interface Persistable) produit les bons champs pour chaque type', () {
+      final urgent = UrgentTask(
+          id: '1', title: 'Urgente', priority: Priority.high, notes: 'critique');
+      final standard =
+          StandardTask(id: '2', title: 'Standard', priority: Priority.low);
+
+      expect(urgent.toJson()['type'], 'urgent');
+      expect(urgent.toJson()['notes'], 'critique');
+      expect(standard.toJson()['type'], 'standard');
+      expect(standard.toJson().containsKey('notes'), isFalse);
     });
 
     test('Sauvegarder puis recharger les tâches conserve leurs données (JSON)', () async {
